@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { fetchNotes } from '../../services/noteService';
+import type { FetchNotesResponse } from '../../services/noteService';
 import NoteList from '../NoteList/NoteList';
 import Pagination from '../Pagination/Pagination';
 import SearchBox from '../SearchBox/SearchBox';
@@ -10,50 +11,35 @@ import NoteForm from '../NoteForm/NoteForm';
 import Loader from '../Loader/Loader';
 import css from './App.module.css';
 
-// Основний компонент
 const App: React.FC = () => {
-  const [page, setPage] = useState(1); // Поточна сторінка
-  const [search, setSearch] = useState(''); // Пошуковий запит
-  const [debouncedSearch] = useDebounce(search, 500); // Відкладений пошук
-  const [isModalOpen, setIsModalOpen] = useState(false); // Стан модалки
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebounce(search, 500);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Запит нотаток
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isFetching, error } = useQuery<FetchNotesResponse>({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes(page, 12, debouncedSearch),
+    // keepPreviousData: true, // ❌ прибрано
   });
 
-  // Обробка пошуку
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
     setPage(1);
   };
 
-  // Form Action для пошуку
-  const handleSearchSubmit = async (formData: FormData) => {
-    const searchValue = formData.get('search') as string;
-    setSearch(searchValue);
-    setPage(1);
-  };
-
-  // Зміна сторінки
   const handlePageChange = ({ selected }: { selected: number }) => {
     setPage(selected + 1);
   };
 
-  // Управління модалкою
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox
-          value={search}
-          onChange={handleSearchChange}
-          action={handleSearchSubmit}
-        />
-        {data && data.totalPages > 1 && (
+        <SearchBox value={search} onChange={handleSearchChange} />
+        {data && 'totalPages' in data && data.totalPages > 1 && (
           <Pagination
             pageCount={data.totalPages}
             onPageChange={handlePageChange}
@@ -65,13 +51,19 @@ const App: React.FC = () => {
         </button>
       </header>
 
-      {isLoading && <Loader />}
-      {error && <div>Error: {(error as Error).message}</div>}
-      {data && data.notes.length > 0 ? (
-        <NoteList notes={data.notes} />
+      {isLoading ? (
+        <Loader />
+      ) : error ? (
+        <div>Error: {(error as Error).message}</div>
+      ) : data && 'notes' in data && data.notes.length > 0 ? (
+        <>
+          {isFetching && <div>Updating...</div>}
+          <NoteList notes={data.notes} />
+        </>
       ) : (
         <div>No notes found</div>
       )}
+
       {isModalOpen && (
         <Modal onClose={closeModal}>
           <NoteForm onClose={closeModal} />

@@ -1,27 +1,26 @@
-// src/components/SearchBox/SearchBox.tsx
+// SearchBox.tsx
 import React from 'react';
 import css from './SearchBox.module.css';
 
-// Інтерфейс пропсів
 interface SearchBoxProps {
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  action: (formData: FormData) => void;
+  onChange: (value: string) => void;
 }
 
-// Поле пошуку
-const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange, action }) => {
+const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
-    <form action={action}>
-      <input
-        className={css.input}
-        type="text"
-        name="search"
-        placeholder="Search notes"
-        value={value}
-        onChange={onChange}
-      />
-    </form>
+    <input
+      className={css.input}
+      type="text"
+      name="search"
+      placeholder="Search notes"
+      value={value}
+      onChange={handleInputChange}
+    />
   );
 };
 

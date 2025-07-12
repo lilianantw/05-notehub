@@ -1,4 +1,3 @@
-// src/components/App/App.tsx
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';

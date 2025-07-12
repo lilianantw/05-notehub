@@ -1,4 +1,3 @@
-// src/components/NoteList/NoteList.tsx
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteNote } from '../../services/noteService';
